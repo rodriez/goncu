@@ -37,6 +37,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/rodriez/goncu"
 )
@@ -47,12 +48,13 @@ func main() {
 			return "A ver long string", nil
 		})
 
+	fmt.Println("Do a lot of things")
 	time.Sleep(100 * time.Millisecond)
 
-	resp, err := promise.Done()
+	response, err := promise.Done()
 
-    fmt.Println(response)
-    fmt.Println(err)
+   	fmt.Println(response)
+   	fmt.Println(err)
 }
 ```
 
@@ -77,7 +79,7 @@ func main() {
 		newSlice = append(newSlice, e.(string))
 	}
 
-    fmt.Println(newSlice)
+	fmt.Println(newSlice)
 }
 ```
 
