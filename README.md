@@ -1,5 +1,5 @@
 # goncu
-A simple library with conccurrent tools
+A simple library with concurrent tools
 
 ## Installation
 
