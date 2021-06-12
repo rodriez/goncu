@@ -1,5 +1,5 @@
 # goncu
-A simple library of conccurrent tools
+A simple library with conccurrent tools
 
 ## Installation
 
@@ -7,6 +7,7 @@ A simple library of conccurrent tools
 go get github.com/rodriez/goncu
 ```
 
+## Worker Pool Usage
 ```go
 package main
 
@@ -27,6 +28,56 @@ func main() {
 
     fmt.Println(response)
     fmt.Println(err)
+}
+```
+
+## Promise Usage
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/rodriez/goncu"
+)
+
+func main() {
+	promise := goncu.NewPromise().
+		Start(func() (interface{}, error) {
+			return "A ver long string", nil
+		})
+
+	time.Sleep(100 * time.Millisecond)
+
+	resp, err := promise.Done()
+
+    fmt.Println(response)
+    fmt.Println(err)
+}
+```
+
+## Iterator Usage
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/rodriez/goncu"
+)
+
+func main() {
+	iterator := goncu.NewIterator(100).
+		Producer(func(i int) interface{} {
+			return fmt.Sprintf("%d", i)
+		})
+
+	newSlice := []string{}
+	for e := range iterator.Each() {
+		newSlice = append(newSlice, e.(string))
+	}
+
+    fmt.Println(newSlice)
 }
 ```
 
