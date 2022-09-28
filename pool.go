@@ -1,147 +1,115 @@
-//Package goncu provides structures that simplify the implementation
-//of solutions for concurrent problems
+// Package goncu provides structures that simplify the implementation
+// of solutions for concurrent problems
 package goncu
 
 import (
-	"errors"
-	"time"
+	"fmt"
+	"sync"
 )
 
-//Pool allows the distribution of a set of tasks among a certain number of workers
-type Pool struct {
-	workers     int
-	task        func(n int) (interface{}, error)
-	sendSuccess func(item interface{})
-	sendError   func(e error)
+// Action to execute
+type Job[T any] func(T)
+
+// Pool allows the distribution of a set of tasks among a certain number of workers
+type pool[T any] struct {
+	size     int
+	iterator iterator[T]
 }
 
-//Creates a new workers Pool
+// Creates a new workers Pool from an iterator
 //
-//workers - indicates the number of workers that the Pool will use to manage the set of tasks,
-//the minimum value allowed is 1 and the maximum is the same number of tasks
-func NewPool(workers int) *Pool {
-	if workers <= 0 {
-		workers = 1
+// size - indicates the number of workers that the Pool will use to manage the set of tasks,
+// the minimum value allowed is 1 and the maximum is the same number of tasks
+// iterator - iterator thar produce the items to process
+func IteratorPool[T any](size int, iterator iterator[T]) pool[T] {
+	if iterator.length < size || size <= 0 {
+		size = 1
 	}
 
-	return &Pool{
-		workers: workers,
+	return pool[T]{
+		size:     size,
+		iterator: iterator,
 	}
 }
 
-//Define the function wich is go to be executed
+// Creates a new workers Pool from a slice
 //
-//task - Function that receives an iteration number and returns an reponse or an error
-func (p *Pool) DO(task func(n int) (interface{}, error)) *Pool {
-	p.task = task
-	return p
+// size - indicates the number of workers that the Pool will use to manage the set of tasks,
+// the minimum value allowed is 1 and the maximum is the same number of tasks
+// s - slice with items to process
+func SlicePool[T any](size int, s []T) pool[T] {
+	iterator := SliceIterator(s)
+
+	if iterator.length < size || size <= 0 {
+		size = 1
+	}
+
+	return pool[T]{
+		size:     size,
+		iterator: iterator,
+	}
 }
 
-//Define the success event listener
+// Creates a new workers Pool
 //
-//event - Function that receives the task response
-func (p *Pool) OnSuccess(event func(item interface{})) *Pool {
-	p.sendSuccess = event
-	return p
+// size - indicates the number of workers that the Pool will use to manage the set of tasks,
+// the minimum value allowed is 1 and the maximum is the same number of tasks
+// iterations - max number of task to process
+func Pool(size int, iterations int) pool[int] {
+	iterator := Iterator(iterations, func(i int) int {
+		return i
+	})
+
+	if iterator.length < size || size <= 0 {
+		size = 1
+	}
+
+	return pool[int]{
+		size:     size,
+		iterator: iterator,
+	}
 }
 
-//Define the error event listener
-//
-//event - Function that receives the task error
-func (p *Pool) OnError(event func(e error)) *Pool {
-	p.sendError = event
-	return p
-}
-
-//Run start pool execution, collect all data and return a response
-//
-//times - Indicates the number of times than task should be called
-func (p *Pool) Run(times int) (*PoolResponse, error) {
-	if err := p.validate(times); err != nil {
-		return nil, err
+// Run start pool execution, collect all data and return a response
+// job - Action to execute
+func (p pool[T]) Run(job Job[T]) error {
+	if job == nil {
+		return fmt.Errorf("invalid pool job")
 	}
 
-	if p.workers > times {
-		p.workers = times
+	if p.iterator.length <= 0 {
+		return fmt.Errorf("invalid number of iterations")
 	}
 
-	start := time.Now()
-	jobs := make(chan int, times)
-	results := make(chan poolItem)
-	defer close(results)
+	var wg sync.WaitGroup
+	wg.Add(p.iterator.length)
 
-	p.ready(jobs, results)
-	p.start(times, jobs)
+	jobs := make(chan T)
+	defer close(jobs)
 
-	response := p.buildResponse(results, times)
-	response.Duration = time.Since(start)
-	return response, nil
-}
+	p.ready(jobs, job, &wg)
+	p.start(jobs)
 
-func (p *Pool) validate(times int) error {
-	if times <= 0 {
-		return errors.New("invalid task amount")
-	}
-
-	if p.task == nil {
-		return errors.New("there is nothing to do")
-	}
+	wg.Wait()
 
 	return nil
 }
 
-func (p *Pool) ready(jobs <-chan int, results chan<- poolItem) {
-	for id := 0; id < p.workers; id++ {
-		go p.worker(id, jobs, results)
+func (p pool[T]) ready(jobs <-chan T, job Job[T], wg *sync.WaitGroup) {
+	for i := 0; i < p.size; i++ {
+		go p.launchWorker(jobs, job, wg)
 	}
 }
 
-func (p *Pool) worker(wokerId int, jobs <-chan int, results chan<- poolItem) {
-	for n := range jobs {
-		data, e := p.task(n)
-
-		if e != nil && p.sendError != nil {
-			p.sendError(e)
-		} else if data != nil && p.sendSuccess != nil {
-			p.sendSuccess(data)
-		}
-
-		results <- poolItem{
-			data: data,
-			err:  e,
-		}
+func (p pool[T]) launchWorker(jobs <-chan T, job Job[T], wg *sync.WaitGroup) {
+	for j := range jobs {
+		job(j)
+		wg.Done()
 	}
 }
 
-func (p *Pool) start(tasks int, jobs chan<- int) {
-	for i := 0; i < tasks; i++ {
-		jobs <- i
+func (p pool[T]) start(jobs chan<- T) {
+	for job := range p.iterator.Each() {
+		jobs <- job
 	}
-	close(jobs)
-}
-
-func (p *Pool) buildResponse(results <-chan poolItem, items int) *PoolResponse {
-	response := PoolResponse{}
-
-	for i := 0; i < items; i++ {
-		if item := <-results; item.err != nil {
-			response.Errors = append(response.Errors, item.err)
-		} else {
-			response.Hits = append(response.Hits, item.data)
-		}
-	}
-
-	return &response
-}
-
-//PoolResponse Contains the pool process duration also the hits and errors collected
-type PoolResponse struct {
-	Duration time.Duration
-	Errors   []error
-	Hits     []interface{}
-}
-
-type poolItem struct {
-	data interface{}
-	err  error
 }

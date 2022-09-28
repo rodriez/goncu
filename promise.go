@@ -1,40 +1,60 @@
 package goncu
 
-//Promise allows to carry out heavy tasks in parallel
+// Promise allows to carry out heavy tasks in parallel
 // and get the results asynchronously when needed
-type Promise struct {
-	ch chan promiseData
+type promise[T any] struct {
+	ch  chan T
+	err chan error
 }
 
-//Creates a new promise
-func NewPromise() *Promise {
-	return &Promise{
-		ch: make(chan promiseData, 1),
+type Task[T any] func() (T, error)
+
+// Creates a new promise
+func NewPromise[T any](task Task[T]) promise[T] {
+	p := promise[T]{
+		ch:  make(chan T, 1),
+		err: make(chan error, 1),
 	}
-}
 
-//Start passed task that in parallel
-//
-//task - is a funcion that make a process and return a response or an error
-func (p *Promise) Start(task func() (interface{}, error)) *Promise {
 	go func() {
-		d, e := task()
-		p.ch <- promiseData{Data: d, Error: e}
+		resp, err := task()
+
+		if err != nil {
+			p.err <- err
+		} else {
+			p.ch <- resp
+		}
+
+		defer p.close()
 	}()
 
 	return p
 }
 
-//Take the task result and return it.
-//if the task is not ready yet, it will wait until it is ready
-func (p *Promise) Done() (interface{}, error) {
+func (p promise[T]) Then(handler func(T)) promise[T] {
 	resp := <-p.ch
-	close(p.ch)
+	handler(resp)
 
-	return resp.Data, resp.Error
+	return p
 }
 
-type promiseData struct {
-	Data  interface{}
-	Error error
+func (p promise[T]) Catch(handler func(error)) promise[T] {
+	err := <-p.err
+	handler(err)
+
+	return p
+}
+
+func (p promise[T]) close() {
+	close(p.err)
+	close(p.ch)
+}
+
+// Take the task result and return it.
+// if the task is not ready yet, it will wait until it is ready
+func (p promise[T]) Done() (T, error) {
+	resp := <-p.ch
+	err := <-p.err
+
+	return resp, err
 }
