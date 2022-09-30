@@ -1,10 +1,12 @@
 # goncu
 A simple library with concurrent tools
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/rodriez/goncu/v2)](https://goreportcard.com/report/github.com/rodriez/goncu/v2)   [![PkgGoDev](https://pkg.go.dev/badge/github.com/rodriez/goncu/goncu/v2)](https://pkg.go.dev/github.com/rodriez/goncu/v2)
+
 ## Installation
 
 ```bash
-go get github.com/rodriez/goncu
+go get github.com/rodriez/goncu/v2
 ```
 
 ## Iterator Usage
@@ -14,7 +16,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/rodriez/goncu"
+	"github.com/rodriez/goncu/v2"
 )
 
 func main() {
@@ -38,7 +40,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/rodriez/goncu"
+	"github.com/rodriez/goncu/v2"
 )
 
 func main() {
@@ -62,7 +64,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/rodriez/goncu"
+	"github.com/rodriez/goncu/v2"
 )
 
 func main() {
@@ -83,7 +85,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/rodriez/goncu"
+	"github.com/rodriez/goncu/v2"
 )
 
 func main() {
@@ -107,7 +109,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/rodriez/goncu"
+	"github.com/rodriez/goncu/v2"
 )
 
 func main() {
@@ -128,7 +130,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/rodriez/goncu"
+	"github.com/rodriez/goncu/v2"
 )
 
 func main() {
@@ -157,7 +159,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/rodriez/goncu"
+	"github.com/rodriez/goncu/v2"
 )
 
 func main() {
@@ -185,7 +187,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rodriez/goncu"
+	"github.com/rodriez/goncu/v2"
 )
 
 func main() {
@@ -212,7 +214,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rodriez/goncu"
+	"github.com/rodriez/goncu/v2"
 )
 
 func main() {

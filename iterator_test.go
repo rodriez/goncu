@@ -3,7 +3,7 @@ package goncu_test
 import (
 	"testing"
 
-	"github.com/rodriez/goncu"
+	"github.com/rodriez/goncu/v2"
 )
 
 func TestIterator_Ok(t *testing.T) {

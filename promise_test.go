@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rodriez/goncu"
+	"github.com/rodriez/goncu/v2"
 )
 
 func TestAsyncPromise(t *testing.T) {

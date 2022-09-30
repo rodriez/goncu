@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/rodriez/goncu"
+	"github.com/rodriez/goncu/v2"
 )
 
 func TestPool_Run_Without_DO(t *testing.T) {
