@@ -26,7 +26,7 @@ func main() {
 
 	newSlice := []string{}
 	for e := range iterator.Each() {
-		newSlice = append(newSlice, e.(string))
+		newSlice = append(newSlice, e)
 	}
 
 	fmt.Println(newSlice)
@@ -95,7 +95,7 @@ func main() {
 
 	newSlice := []string{}
 	for e := range iterator.Each() {
-		newSlice = append(newSlice, e.(string))
+		newSlice = append(newSlice, e)
 	}
 
 	fmt.Println(newSlice)
