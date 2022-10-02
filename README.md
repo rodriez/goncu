@@ -115,7 +115,7 @@ import (
 func main() {
 	hits := int32(0)
 	err := goncu.Pool(2, 10).Run(func(n int) {
-		atomic.AddInt32(&hits, n)
+		atomic.AddInt32(&hits, int32(n))
 	})
 
     fmt.Println(hits)
@@ -138,17 +138,12 @@ func main() {
 		return fmt.Sprintf("%d", i)
 	})
 
-	buffer := make(chan string, 100)
-	defer close(buffer)
 	err := goncu.IteratorPool(10, iterator).Run(func(s string) {
-		buffer <- s
+		fmt.Print(s)
 	})
 
-	for hit := range buffer {
-		fmt.Print(hit)
-	}
 	fmt.Print("\n")
-    fmt.Println(err)
+	fmt.Println(err)
 }
 ```
 
@@ -165,15 +160,10 @@ import (
 func main() {
 	data := []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"}
 
-	buffer := make(chan string, 100)
-	defer close(buffer)
-	err := goncu.SlicePool(-1, data).Run(func(s string) {
-		buffer <- s
+	err := goncu.SlicePool(5, data).Run(func(s string) {
+		fmt.Print(s)
 	})
 
-	for hit := range buffer {
-		fmt.Print(hit)
-	}
 	fmt.Print("\n")
     fmt.Println(err)
 }
